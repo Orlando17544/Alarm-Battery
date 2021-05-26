@@ -1,0 +1,64 @@
+#!/bin/bash
+
+clear
+
+while true; do
+
+	echo "Monitoring battery..."
+
+	state="$(acpi | grep -Po '[A-z]+(?=,)')"
+	batteryLevel="$(acpi | grep -Po '\d+(?=%)')"
+
+	if [[ "$state" == Charging ]]; then
+		if [[ "$batteryLevel" -ge 80 ]]; then
+			mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			while [[ "$state" == Charging ]]; do
+				read -p "Plase disconnect the charger and press enter -> "
+				clear
+				state="$(acpi | grep -Po '[A-z]+(?=,)')"
+			done
+			kill $!
+			echo "Monitoring battery..."
+			interval=30
+		elif [[ "$batteryLevel" -ge 65 ]]; then
+			interval=5
+		elif [[ "$batteryLevel" -ge 50 ]]; then
+			interval=10
+		elif [[ "$batteryLevel" -ge 35 ]]; then
+			interval=15
+		elif [[ "$batteryLevel" -ge 20 ]]; then
+			interval=20
+		elif [[ "$batteryLevel" -ge 5 ]]; then
+			interval=25
+		else 
+			interval=30
+		fi
+	elif [[ "$state" == Discharging ]]; then
+		if [[ "$batteryLevel" -le 30 ]]; then
+			mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			while [[ "$state" == Discharging ]]; do
+				read -p "Plase connect the charger and press enter -> "
+				clear
+				state="$(acpi | grep -Po '[A-z]+(?=,)')"
+			done
+			kill $!
+			echo "Monitoring battery..."
+			interval=30
+		elif [[ "$batteryLevel" -le 45 ]]; then
+			interval=5
+		elif [[ "$batteryLevel" -le 60 ]]; then
+			interval=10
+		elif [[ "$batteryLevel" -le 75 ]]; then
+			interval=15
+		elif [[ "$batteryLevel" -le 90 ]]; then
+			interval=20
+		elif [[ "$batteryLevel" -le 95 ]]; then
+			interval=25
+		else 
+			interval=30
+		fi
+
+	fi
+	sleep ${interval}m
+	clear
+done
