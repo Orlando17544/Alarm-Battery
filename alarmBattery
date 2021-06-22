@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# It is neccesary acpi
+
 clear
 
 while true; do
@@ -11,7 +13,12 @@ while true; do
 
 	if [[ "$state" == Charging ]]; then
 		if [[ "$batteryLevel" -ge 80 ]]; then
-			mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			# if headphones are unpluged (https://askubuntu.com/questions/133809/mute-sound-on-headphone-unplug)
+			if [[ "$(cat '/proc/asound/card0/codec#0' | head -n 140 | tail -n 1 | grep -Po 'OUT')" == "OUT" ]]; then
+				mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			else
+				mpv --volume 50 ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			fi
 			while [[ "$state" == Charging ]]; do
 				read -p "Plase disconnect the charger and press enter -> "
 				clear
@@ -35,7 +42,11 @@ while true; do
 		fi
 	elif [[ "$state" == Discharging ]]; then
 		if [[ "$batteryLevel" -le 30 ]]; then
-			mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			if [[ "$(cat '/proc/asound/card0/codec#0' | head -n 140 | tail -n 1 | grep -Po 'OUT')" == "OUT" ]]; then
+				mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			else
+				mpv --volume 50 ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+			fi
 			while [[ "$state" == Discharging ]]; do
 				read -p "Plase connect the charger and press enter -> "
 				clear
