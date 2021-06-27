@@ -1,6 +1,19 @@
 #!/bin/bash
 
-# It is neccesary acpi
+# It is neccesary acpi and acpid
+
+if [[ "$(ps aux | grep -P acpi_listen | grep -Pv 'grep')" == "" ]]; then
+	systemctl start acpid.service
+	acpi_listen | grep -Pi 'headphone' > ~/tmp/headphonesStatus &
+fi
+
+playMusic () {
+	if [[ "$(cat ~/tmp/headphonesStatus | tail -n 1 | grep -P 'unplug')" != "" ]]; then
+		mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+	else
+		mpv --volume 50 ~/Música/bash/alarmBattery.mp3 &> /dev/null &
+	fi
+}
 
 clear
 
@@ -13,12 +26,7 @@ while true; do
 
 	if [[ "$state" == Charging ]]; then
 		if [[ "$batteryLevel" -ge 80 ]]; then
-			# if headphones are unpluged (https://askubuntu.com/questions/133809/mute-sound-on-headphone-unplug)
-			if [[ "$(cat '/proc/asound/card0/codec#0' | head -n 140 | tail -n 1 | grep -Po 'OUT')" == "OUT" ]]; then
-				mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
-			else
-				mpv --volume 50 ~/Música/bash/alarmBattery.mp3 &> /dev/null &
-			fi
+			playMusic
 			while [[ "$state" == Charging ]]; do
 				read -p "Plase disconnect the charger and press enter -> "
 				clear
@@ -42,11 +50,7 @@ while true; do
 		fi
 	elif [[ "$state" == Discharging ]]; then
 		if [[ "$batteryLevel" -le 30 ]]; then
-			if [[ "$(cat '/proc/asound/card0/codec#0' | head -n 140 | tail -n 1 | grep -Po 'OUT')" == "OUT" ]]; then
-				mpv ~/Música/bash/alarmBattery.mp3 &> /dev/null &
-			else
-				mpv --volume 50 ~/Música/bash/alarmBattery.mp3 &> /dev/null &
-			fi
+			playMusic
 			while [[ "$state" == Discharging ]]; do
 				read -p "Plase connect the charger and press enter -> "
 				clear
